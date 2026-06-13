@@ -1,13 +1,55 @@
-## heic
-[![Status](https://github.com/gen2brain/heic/actions/workflows/test.yml/badge.svg)](https://github.com/gen2brain/heic/actions)
-[![Go Reference](https://pkg.go.dev/badge/github.com/gen2brain/heic.svg)](https://pkg.go.dev/github.com/gen2brain/heic)
+# go-heic
 
-Go decoder for [HEIC Image File Format](https://en.wikipedia.org/wiki/High_Efficiency_Image_File_Format) (HEVC in HEIF).
+## 実行に必要なファイル
 
-Based on [libheif](https://github.com/strukturag/libheif) and [libde265](https://github.com/strukturag/libde265) compiled to [WASM](https://en.wikipedia.org/wiki/WebAssembly) and used with [wazero](https://wazero.io/) runtime (CGo-free).
+このライブラリは [purego](https://github.com/ebitengine/purego) を使って libheif の共有ライブラリを動的に読み込みます。事前に以下のファイルをインストールしてください。
 
-The library will first try to use a dynamic/shared library (if installed) via [purego](https://github.com/ebitengine/purego) and will fall back to WASM.
+| OS | 必要なファイル |
+|---|---|
+| Windows | `libheif.dll`（または `heif.dll`） |
+| Linux | `libheif.so` |
+| macOS | `libheif.dylib` |
 
-### Build tags
+## 使い方
 
-* `nodynamic` - do not use dynamic/shared library (use only WASM)
+### インポート
+
+```go
+import "github.com/f0reth/go-heic"
+```
+
+### デコード（HEIC → image.Image）
+
+```go
+f, _ := os.Open("input.heic")
+defer f.Close()
+
+img, err := heic.Decode(f)
+```
+
+### 設定のみのデコード（サイズや色モデルの取得）
+
+```go
+f, _ := os.Open("input.heic")
+defer f.Close()
+
+cfg, err := heic.DecodeConfig(f)
+// cfg.Width, cfg.Height, cfg.ColorModel
+```
+
+### image パッケージ経由のデコード
+
+`import _ "github.com/f0reth/go-heic"` のように副作用インポートすると、
+`image.Decode` / `image.DecodeConfig` で HEIC を自動判別してデコードできます。
+
+```go
+img, format, err := image.Decode(f) // format == "heic"
+```
+
+### ライブラリの読み込み確認
+
+```go
+if err := heic.Dynamic(); err != nil {
+    log.Fatal("共有ライブラリが見つかりません:", err)
+}
+```
