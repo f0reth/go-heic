@@ -199,7 +199,7 @@ func TestDecodeConfigViaImagesPackage(t *testing.T) {
 func BenchmarkDecode(b *testing.B) {
 	skipIfNoLibrary(b)
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _, err := decode(bytes.NewReader(testHeic8), false)
 		if err != nil {
 			b.Error(err)
@@ -210,7 +210,7 @@ func BenchmarkDecode(b *testing.B) {
 func BenchmarkDecodeConfig(b *testing.B) {
 	skipIfNoLibrary(b)
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _, err := decode(bytes.NewReader(testHeic8), true)
 		if err != nil {
 			b.Error(err)
