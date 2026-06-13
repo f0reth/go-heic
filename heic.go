@@ -1,4 +1,5 @@
-// Package heic implements an HEIC image decoder based on libheif/libde265 compiled to WASM.
+// Package heic implements an HEIC image decoder based on the libheif/libde265
+// shared library used via purego (CGo-free).
 package heic
 
 import (
@@ -16,19 +17,13 @@ var (
 
 // Decode reads a HEIC image from r and returns it as an image.Image.
 func Decode(r io.Reader) (image.Image, error) {
-	var err error
-	var img image.Image
+	if !dynamic {
+		return nil, dynamicErr
+	}
 
-	if dynamic && !ForceWasmMode {
-		img, _, err = decodeDynamic(r, false)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		img, _, err = decode(r, false)
-		if err != nil {
-			return nil, err
-		}
+	img, _, err := decode(r, false)
+	if err != nil {
+		return nil, err
 	}
 
 	return img, nil
@@ -36,52 +31,29 @@ func Decode(r io.Reader) (image.Image, error) {
 
 // DecodeConfig returns the color model and dimensions of a HEIC image without decoding the entire image.
 func DecodeConfig(r io.Reader) (image.Config, error) {
-	var err error
-	var cfg image.Config
+	if !dynamic {
+		return image.Config{}, dynamicErr
+	}
 
-	if dynamic && !ForceWasmMode {
-		_, cfg, err = decodeDynamic(r, true)
-		if err != nil {
-			return image.Config{}, err
-		}
-	} else {
-		_, cfg, err = decode(r, true)
-		if err != nil {
-			return image.Config{}, err
-		}
+	_, cfg, err := decode(r, true)
+	if err != nil {
+		return image.Config{}, err
 	}
 
 	return cfg, nil
 }
-
-// ForceWasmMode, if true, forces using the WASM-based decoder even if a
-// dynamic/shared library is available.
-//
-// This exists mainly for testing purposes.
-//
-// It is not safe to change this concurrently with any other use of this
-// package.
-var ForceWasmMode bool
 
 // Dynamic returns error (if there was any) during opening dynamic/shared library.
 func Dynamic() error {
 	return dynamicErr
 }
 
-// Init initializes wazero runtime and compiles the module.
-// This function does nothing if a dynamic/shared library is used and Dynamic() returns nil.
-// There is no need to explicitly call this function, first Decode will initialize the runtime.
-func Init() {
-	if dynamic && dynamicErr == nil {
-		return
-	}
-
-	initOnce()
-}
+// Init is kept for backward compatibility and does nothing.
+// The dynamic/shared library is loaded during package initialization;
+// use Dynamic to check whether loading succeeded.
+func Init() {}
 
 const (
-	alignSize = 16
-
 	heifMaxHeaderSize = 262144
 
 	heifColorspaceUndefined  = 99
@@ -107,10 +79,6 @@ const (
 
 	heifFiletypeYesSupported = 1
 )
-
-func alignm(a int) int {
-	return (a + (alignSize - 1)) & (^(alignSize - 1))
-}
 
 func yCbCrSize(r image.Rectangle, subsampleRatio image.YCbCrSubsampleRatio) (w, h, cw, ch int) {
 	w, h = r.Dx(), r.Dy()

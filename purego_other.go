@@ -1,4 +1,4 @@
-//go:build (!linux && !darwin && !windows) || android || nodynamic || arm || 386 || mips || mipsle
+//go:build !unix && !darwin && !windows
 
 package heic
 
@@ -10,10 +10,10 @@ import (
 
 var (
 	dynamic    = false
-	dynamicErr = fmt.Errorf("heic: dynamic disabled")
+	dynamicErr = fmt.Errorf("heic: platform not supported")
 )
 
-func decodeDynamic(r io.Reader, configOnly bool) (image.Image, image.Config, error) {
+func decode(r io.Reader, configOnly bool) (image.Image, image.Config, error) {
 	return nil, image.Config{}, dynamicErr
 }
 

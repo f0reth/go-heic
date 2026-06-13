@@ -1,4 +1,4 @@
-//go:build (linux || darwin || windows) && !(nodynamic || arm || 386 || mips || mipsle)
+//go:build unix || darwin || windows
 
 package heic
 
@@ -13,7 +13,7 @@ import (
 	"github.com/ebitengine/purego"
 )
 
-func decodeDynamic(r io.Reader, configOnly bool) (image.Image, image.Config, error) {
+func decode(r io.Reader, configOnly bool) (image.Image, image.Config, error) {
 	var err error
 	var cfg image.Config
 	var data []byte
@@ -187,12 +187,6 @@ func decodeDynamic(r io.Reader, configOnly bool) (image.Image, image.Config, err
 }
 
 func init() {
-	if runtime.GOOS == "windows" {
-		dynamic = false
-		dynamicErr = fmt.Errorf("dynamic library loading not supported on windows yet; see https://github.com/gen2brain/heic/issues/11")
-		return
-	}
-
 	var err error
 	defer func() {
 		if r := recover(); r != nil {

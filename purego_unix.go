@@ -1,4 +1,4 @@
-//go:build linux && !android && !darwin && !(nodynamic || arm || 386 || mips || mipsle)
+//go:build unix && !darwin
 
 package heic
 
