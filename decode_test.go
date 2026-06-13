@@ -3,7 +3,6 @@ package heic
 import (
 	"bytes"
 	_ "embed"
-	"fmt"
 	"image"
 	"image/jpeg"
 	"io"
@@ -24,15 +23,15 @@ var testHeic12 []byte
 //go:embed testdata/gray.heic
 var testGray []byte
 
-func skipIfNoLibrary(tb testing.TB) {
+func requireLibrary(tb testing.TB) {
+	tb.Helper()
 	if err := Dynamic(); err != nil {
-		fmt.Println(err)
-		tb.Skip()
+		tb.Fatalf("failed to load library: %v", err)
 	}
 }
 
 func TestDecode(t *testing.T) {
-	skipIfNoLibrary(t)
+	requireLibrary(t)
 
 	img, _, err := decode(bytes.NewReader(testHeic), false)
 	if err != nil {
@@ -52,7 +51,7 @@ func TestDecode(t *testing.T) {
 }
 
 func TestDecode8(t *testing.T) {
-	skipIfNoLibrary(t)
+	requireLibrary(t)
 
 	img, _, err := decode(bytes.NewReader(testHeic8), false)
 	if err != nil {
@@ -72,7 +71,7 @@ func TestDecode8(t *testing.T) {
 }
 
 func TestDecode12(t *testing.T) {
-	skipIfNoLibrary(t)
+	requireLibrary(t)
 
 	img, _, err := decode(bytes.NewReader(testHeic12), false)
 	if err != nil {
@@ -92,7 +91,7 @@ func TestDecode12(t *testing.T) {
 }
 
 func TestDecodeGray(t *testing.T) {
-	skipIfNoLibrary(t)
+	requireLibrary(t)
 
 	img, _, err := decode(bytes.NewReader(testGray), false)
 	if err != nil {
@@ -112,7 +111,7 @@ func TestDecodeGray(t *testing.T) {
 }
 
 func TestImageDecode(t *testing.T) {
-	skipIfNoLibrary(t)
+	requireLibrary(t)
 
 	img, _, err := image.Decode(bytes.NewReader(testHeic8))
 	if err != nil {
@@ -126,7 +125,7 @@ func TestImageDecode(t *testing.T) {
 }
 
 func TestDecodeConfig(t *testing.T) {
-	skipIfNoLibrary(t)
+	requireLibrary(t)
 
 	cfg, err := DecodeConfig(bytes.NewReader(testHeic8))
 	if err != nil {
@@ -143,7 +142,7 @@ func TestDecodeConfig(t *testing.T) {
 }
 
 func TestDecodeSync(t *testing.T) {
-	skipIfNoLibrary(t)
+	requireLibrary(t)
 
 	wg := sync.WaitGroup{}
 	ch := make(chan bool, 2)
@@ -179,7 +178,7 @@ func (r smallChunkReader) Read(p []byte) (int, error) {
 }
 
 func TestDecodeConfigViaImagesPackage(t *testing.T) {
-	skipIfNoLibrary(t)
+	requireLibrary(t)
 
 	cfg, typ, err := image.DecodeConfig(smallChunkReader{bytes.NewReader(testHeic)})
 	if err != nil {
@@ -197,7 +196,7 @@ func TestDecodeConfigViaImagesPackage(t *testing.T) {
 }
 
 func BenchmarkDecode(b *testing.B) {
-	skipIfNoLibrary(b)
+	requireLibrary(b)
 
 	for b.Loop() {
 		_, _, err := decode(bytes.NewReader(testHeic8), false)
@@ -208,7 +207,7 @@ func BenchmarkDecode(b *testing.B) {
 }
 
 func BenchmarkDecodeConfig(b *testing.B) {
-	skipIfNoLibrary(b)
+	requireLibrary(b)
 
 	for b.Loop() {
 		_, _, err := decode(bytes.NewReader(testHeic8), true)
