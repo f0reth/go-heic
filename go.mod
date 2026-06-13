@@ -1,5 +1,5 @@
-module github.com/gen2brain/heic
+module github.com/f0reth/go-heic
 
-go 1.25
+go 1.26
 
 require github.com/ebitengine/purego v0.9.1
